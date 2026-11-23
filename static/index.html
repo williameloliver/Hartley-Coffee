@@ -1,1 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#6f4e37" />
+  <title>Hartley Coffee</title>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <style>
+    :root{
+      --bg:#f7f1e8;--card:#fffaf4;--coffee:#6f4e37;--coffee2:#8f6748;
+      --cream:#ead8c0;--cream2:#f0e4d6;--ink:#2e261f;--muted:#786d63;
+      --green:#2f7d55;--red:#a94a42;--amber:#a66a20;
+      --shadow:0 10px 25px rgba(73,49,31,.09);--radius:20px
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+    body{min-height:100vh;padding-bottom:calc(94px + env(safe-area-inset-bottom))}
+    button,input,select,textarea{font:inherit}
+    button{touch-action:manipulation}
+    .wrap{max-width:780px;margin:auto;padding:18px}
+    .hero{background:linear-gradient(135deg,#5b3c29,#9a7151);color:white;border-radius:28px;padding:22px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+    .hero:after{content:"☕";position:absolute;right:16px;top:0;font-size:90px;opacity:.13;transform:rotate(-8deg)}
+    .brand{font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.78;font-weight:800}
+    .hero h1{margin:4px 0 4px;font-size:30px}.hero p{margin:0;opacity:.86;font-size:14px}
+    .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+    .stat{background:rgba(255,255,255,.14);padding:14px;border-radius:18px;backdrop-filter:blur(6px)}
+    .stat .label{font-size:12px;opacity:.8}.stat .value{font-weight:800;font-size:21px;margin-top:3px}
+    .section{margin-top:17px}.section-title{display:flex;align-items:center;justify-content:space-between;margin:0 2px 9px;gap:10px}.section-title h2{font-size:18px;margin:0}
+    .card{background:var(--card);border-radius:var(--radius);padding:15px;box-shadow:var(--shadow)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .product-btn{border:0;border-radius:18px;background:#fff;padding:16px;text-align:left;box-shadow:0 4px 14px rgba(63,43,28,.07);border:1px solid #eadfd1;min-height:96px}
+    .product-btn:active{transform:scale(.98)}.product-btn strong{display:block;font-size:16px}.product-btn span.price{display:block;color:var(--coffee);font-weight:800;margin-top:5px}.product-btn small{display:block;color:var(--muted);margin-top:4px}
+    .type-chip{display:inline-block;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:800;margin-top:7px;background:#efe2d2;color:var(--coffee)}
+    .row{display:flex;gap:9px}.row>*{flex:1}
+    input,select,textarea{width:100%;border:1px solid #dfd2c4;background:white;border-radius:14px;padding:12px 13px;color:var(--ink);outline:none}
+    textarea{min-height:88px;resize:vertical} input:focus,select:focus,textarea:focus{border-color:var(--coffee2)}
+    label{font-size:12px;color:var(--muted);display:block;margin:0 0 5px 2px}.field{margin-bottom:10px}
+    .primary,.secondary,.danger{border:0;border-radius:14px;padding:12px 14px;font-weight:800}
+    .primary{background:var(--coffee);color:white}.secondary{background:var(--cream);color:#4b3526}.danger{background:#f4d8d4;color:#8d3931}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar button{flex:1;min-width:120px}
+    .list{display:flex;flex-direction:column;gap:8px}.item{display:flex;justify-content:space-between;gap:10px;background:white;border:1px solid #ece2d7;border-radius:15px;padding:11px 12px}
+    .item .main{min-width:0}.item .main strong{display:block}.item .main small{color:var(--muted)}.item .amount{font-weight:800;white-space:nowrap}
+    .amount.pos{color:var(--green)}.amount.neg{color:var(--red)}.empty{text-align:center;color:var(--muted);padding:16px 0;font-size:14px}
+    .tabbar{position:fixed;z-index:10;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));width:calc(100% - 24px);max-width:750px;background:rgba(255,250,244,.94);backdrop-filter:blur(18px);border:1px solid rgba(111,78,55,.12);border-radius:22px;padding:7px;display:grid;grid-template-columns:repeat(5,1fr);box-shadow:0 8px 32px rgba(58,39,25,.17)}
+    .tabbar button{border:0;background:transparent;border-radius:16px;padding:9px 3px;color:var(--muted);font-size:11px;font-weight:700}.tabbar button.active{background:#efe2d2;color:var(--coffee)}.tabbar .ico{display:block;font-size:18px;margin-bottom:2px}
+    .view{display:none}.view.active{display:block}.pill{background:#efe2d2;color:var(--coffee);padding:6px 9px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+    .notice{font-size:13px;color:var(--muted);line-height:1.45}.divider{height:1px;background:#eadfd3;margin:14px 0}.mini{font-size:12px;color:var(--muted)}
+    .sale-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:110px;background:#2f7d55;color:white;padding:11px 15px;border-radius:999px;font-weight:800;opacity:0;pointer-events:none;transition:.2s;z-index:20}
+    .sale-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .calcbox{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.metric{border:1px solid #e5d9cb;background:#fff;border-radius:16px;padding:12px}.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;font-size:18px;margin-top:3px}.metric.good strong{color:var(--green)}.metric.warn strong{color:var(--amber)}.metric.bad strong{color:var(--red)}
+    .report-hero{background:linear-gradient(135deg,#fff,#f0e4d6);border:1px solid #e8dacb}
+    .subhead{font-size:14px;font-weight:800;margin:0 0 10px;color:var(--coffee)}
+    .component-row{display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end;margin-bottom:8px}.component-row button{height:43px}
+    .combo-preview{margin-top:12px;border:1px solid #dac8b5;background:linear-gradient(135deg,#fffaf4,#f2e4d4);border-radius:18px;padding:13px}
+    .combo-preview-title{font-weight:900;color:var(--coffee);margin-bottom:8px}
+    .combo-preview-line{padding:7px 0;border-bottom:1px solid #eadfd3;font-size:13px;line-height:1.35}
+    .combo-preview-line:last-of-type{border-bottom:0}
+    .combo-total{margin-top:9px;background:#fff;border-radius:13px;padding:10px 11px;font-size:13px;line-height:1.45}
+    .hidden{display:none!important}
+    @media(max-width:440px){.wrap{padding:14px}.hero h1{font-size:26px}.tabbar button{font-size:10px}.tabbar .ico{font-size:17px}.component-row{grid-template-columns:1fr 74px auto}}
+  </style>
+</head>
+<body>
+<div class="wrap">
 
+<section id="view-sales" class="view active">
+  <div class="hero">
+    <div class="brand">Hartley Coffee</div>
+    <h1>Caja del día</h1>
+    <p>Café, extras y combos en una sola jornada.</p><p id="dbStatus" style="font-size:12px;margin-top:8px">Conectando con la base de datos…</p>
+    <div class="stats">
+      <div class="stat"><div class="label">Ventas</div><div class="value" id="statSales">$0</div></div>
+      <div class="stat"><div class="label">Gastos</div><div class="value" id="statExpenses">$0</div></div>
+      <div class="stat"><div class="label">Ganancia neta</div><div class="value" id="statNet">$0</div></div>
+      <div class="stat"><div class="label">Productos vendidos</div><div class="value" id="statUnits">0</div></div>
+    </div>
+  </div>
+
+  <div class="section"><div class="section-title"><h2>Venta rápida</h2><span class="pill">1 toque</span></div><div id="productButtons" class="grid"></div></div>
+
+  <div class="section">
+    <div class="section-title"><h2>Cargar ventas al cierre</h2><span class="pill">Ej: 54 unidades</span></div>
+    <div class="card">
+      <div class="field"><label>Producto</label><select id="bulkProduct"></select></div>
+      <div class="row">
+        <div class="field"><label>Cantidad vendida</label><input id="bulkQty" type="number" inputmode="numeric" min="1" placeholder="54"></div>
+        <div class="field"><label>Precio unitario</label><input id="bulkPrice" type="number" inputmode="numeric" min="0" placeholder="2500"></div>
+      </div>
+      <button class="primary" style="width:100%" onclick="addBulkSale()">Agregar cantidad al día</button>
+      <p class="notice">Puedes usarlo tanto para café como para galletas, magdalenas o combos.</p>
+    </div>
+  </div>
+
+  <div class="section"><div class="section-title"><h2>Últimos movimientos</h2></div><div class="card"><div id="recentList" class="list"></div></div></div>
+</section>
+
+<section id="view-expenses" class="view">
+  <div class="section-title"><h2>Registrar gasto</h2></div>
+  <div class="card">
+    <div class="field"><label>Categoría</label>
+      <select id="expenseCategory"><option>Inversión inicial</option><option>Vasos / tapas</option><option>Café</option><option>Panadería / extras</option><option>Azúcar / endulzante</option><option>Leche</option><option>Transporte</option><option>Comida</option><option>Otros</option></select>
+    </div>
+    <div class="field"><label>Descripción</label><input id="expenseDescription" placeholder="Ej: 24 magdalenas"></div>
+    <div class="field"><label>Monto (CLP)</label><input id="expenseAmount" type="number" inputmode="numeric" placeholder="Ej: 12000"></div>
+    <button class="primary" style="width:100%" onclick="addExpense()">Agregar gasto</button>
+  </div>
+  <div class="section"><div class="section-title"><h2>Gastos registrados</h2></div><div class="card"><div id="expenseList" class="list"></div></div></div>
+</section>
+
+<section id="view-inventory" class="view">
+  <div class="section-title"><h2>Inventario de jornada</h2><span class="pill">Consumo real</span></div>
+
+  <div class="card">
+    <h3 class="subhead">🥤 Vasos</h3>
+    <div class="row">
+      <div class="field"><label>Vasos al comenzar</label><input id="startCups" type="number" inputmode="numeric" min="0" placeholder="100" oninput="saveInventory()"></div>
+      <div class="field"><label>Vasos al terminar</label><input id="endCups" type="number" inputmode="numeric" min="0" placeholder="44" oninput="saveInventory()"></div>
+    </div>
+    <div class="calcbox">
+      <div class="metric"><small>Vasos utilizados</small><strong id="cupsUsed">—</strong></div>
+      <div class="metric"><small>Dif. vs cafés preparados</small><strong id="cupVariance">—</strong></div>
+    </div>
+  </div>
+
+  <div class="section"><div class="card">
+    <h3 class="subhead">🫘 Café en grano / molido</h3>
+    <div class="row">
+      <div class="field"><label>Gramos al comenzar</label><input id="startGrams" type="number" inputmode="decimal" min="0" step="0.1" placeholder="1000" oninput="saveInventory()"></div>
+      <div class="field"><label>Gramos al terminar</label><input id="endGrams" type="number" inputmode="decimal" min="0" step="0.1" placeholder="180" oninput="saveInventory()"></div>
+    </div>
+    <div class="calcbox">
+      <div class="metric"><small>Gramos utilizados</small><strong id="gramsUsed">—</strong></div>
+      <div class="metric"><small>Consumo esperado por recetas</small><strong id="expectedGrams">—</strong></div>
+      <div class="metric" id="wasteMetric"><small>Merma / diferencia</small><strong id="coffeeVariance">—</strong></div>
+      <div class="metric"><small>Promedio real por café</small><strong id="realGramsPerCoffee">—</strong></div>
+    </div>
+    <p class="notice">El consumo esperado se calcula automáticamente según la receta de cada café vendido, incluso cuando el café viene dentro de un combo.</p>
+  </div></div>
+
+  <div class="section">
+    <div class="section-title"><h2>🍪 Extras</h2><span class="pill">Unidades</span></div>
+    <div class="card"><div id="extraInventoryList" class="list"></div><p class="notice">Para cada extra se compara el stock real usado con lo que debería haberse utilizado según ventas individuales y combos.</p></div>
+  </div>
+
+  <div class="section"><div class="card"><div class="field" style="margin-bottom:0"><label>Notas de la jornada</label><textarea id="dayNotes" placeholder="Ej: hubo viento, se dañó una magdalena, se probaron 2 filtrados..." oninput="saveInventory()"></textarea></div></div></div>
+</section>
+
+<section id="view-products" class="view">
+  <div class="section-title"><h2>Productos</h2><span class="pill">POO</span></div>
+
+  <div class="card">
+    <div class="field"><label>Tipo de producto</label>
+      <select id="productType" onchange="updateProductForm()">
+        <option value="coffee">☕ Café</option>
+        <option value="extra">🍪 Extra</option>
+        <option value="combo">🧺 Combo</option>
+      </select>
+    </div>
+    <div class="row">
+      <div class="field"><label>Nombre</label><input id="productName" placeholder="Ej: Magdalena"></div>
+      <div class="field"><label>Precio</label><input id="productPrice" type="number" inputmode="numeric" placeholder="2000"></div>
+    </div>
+
+    <div id="coffeeFields">
+      <div class="field"><label>Receta: gramos de café por unidad</label><input id="coffeeRecipeGrams" type="number" inputmode="decimal" step="0.1" min="0" placeholder="15"></div>
+      <p class="notice">Cada café puede tener una receta distinta.</p>
+    </div>
+
+    <div id="extraFields" class="hidden">
+      <p class="notice">Los extras se controlan por unidades. Ej.: 20 magdalenas al inicio, 7 al final.</p>
+    </div>
+
+    <div id="comboFields" class="hidden">
+      <div class="section-title" style="margin-top:4px"><h2 style="font-size:15px">Componentes del combo</h2><button class="secondary" style="padding:8px 10px" onclick="addComboComponentRow()" type="button">+ componente</button></div>
+      <div id="comboComponents"></div>
+      <div id="comboPreview" class="combo-preview">
+        <div class="combo-preview-title">🧮 Así se descontará esta venta</div>
+        <div id="comboPreviewLines"></div>
+        <div id="comboPreviewTotal" class="combo-total">Agrega componentes para ver el consumo esperado.</div>
+      </div>
+      <p class="notice">Ejemplo: “Café + Magdalena” = 1 Filtrado + 1 Magdalena. La vista previa usa automáticamente la receta guardada en cada café.</p>
+    </div>
+
+    <button class="primary" style="width:100%" onclick="addProduct()">Agregar producto</button>
+  </div>
+
+  <div class="section"><div class="card"><div id="productList" class="list"></div></div></div>
+</section>
+
+<section id="view-data" class="view">
+  <div class="section-title"><h2>Resumen del día</h2><span class="pill" id="reportDate"></span></div>
+  <div class="card report-hero">
+    <div class="stats" style="margin-top:0">
+      <div class="stat" style="background:white;color:var(--ink)"><div class="label">Ticket promedio</div><div class="value" id="avgTicket">$0</div></div>
+      <div class="stat" style="background:white;color:var(--ink)"><div class="label">Movimientos</div><div class="value" id="movementCount">0</div></div>
+      <div class="stat" style="background:white;color:var(--ink)"><div class="label">Cafés preparados</div><div class="value" id="summaryCoffeesPrepared">0</div></div>
+      <div class="stat" style="background:white;color:var(--ink)"><div class="label">Café usado</div><div class="value" id="summaryGramsUsed">—</div></div>
+    </div>
+  </div>
+
+  <div class="section"><div class="card">
+    <div class="section-title" style="margin:0 0 10px"><h2 style="font-size:16px">Balance de inventario</h2></div>
+    <div class="list">
+      <div class="item"><div class="main"><strong>Vasos vs. cafés preparados</strong><small>Incluye cafés vendidos dentro de combos</small></div><div class="amount" id="summaryCupVariance">—</div></div>
+      <div class="item"><div class="main"><strong>Merma / diferencia de café</strong><small>Consumo real menos consumo esperado por recetas</small></div><div class="amount" id="summaryCoffeeVariance">—</div></div>
+    </div>
+  </div></div>
+
+  <div class="section"><div class="card">
+    <button class="primary" style="width:100%;margin-bottom:9px" onclick="exportPDF()">📄 Exportar informe PDF</button>
+    <div class="toolbar"><button class="secondary" onclick="exportData()">Exportar respaldo</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importar respaldo</button></div>
+    <input id="importFile" type="file" accept="application/json" hidden onchange="importData(event)">
+    <div class="divider"></div>
+    <button class="danger" style="width:100%" onclick="resetDay()">Comenzar jornada nueva</button>
+    <p class="notice">Los datos se guardan localmente en este iPhone. El stock final pasa a ser el inicial de la siguiente jornada.</p>
+  </div></div>
+</section>
+
+</div>
+
+<div class="tabbar">
+  <button class="active" onclick="showView('sales',this)"><span class="ico">☕</span>Ventas</button>
+  <button onclick="showView('expenses',this)"><span class="ico">🧾</span>Gastos</button>
+  <button onclick="showView('inventory',this)"><span class="ico">📦</span>Stock</button>
+  <button onclick="showView('products',this)"><span class="ico">🏷️</span>Productos</button>
+  <button onclick="showView('data',this)"><span class="ico">📊</span>Resumen</button>
+</div>
+
+<div id="toast" class="sale-toast">Venta agregada</div>
+
+<script>
+const KEY="hartleyCoffeeData_v3";
+const OLD_KEY="hartleyCoffeeData_v2";
+
+/* ---------- MODELO POO ---------- */
+class Product{
+  constructor({id=uid(),name,price,type}){this.id=id;this.name=name;this.price=Number(price)||0;this.type=type}
+  label(){return this.name}
+}
+class CoffeeProduct extends Product{
+  constructor(o){super({...o,type:"coffee"});this.recipeGrams=Number(o.recipeGrams)||0}
+}
+class ExtraProduct extends Product{
+  constructor(o){super({...o,type:"extra"})}
+}
+class ComboProduct extends Product{
+  constructor(o){super({...o,type:"combo"});this.components=Array.isArray(o.components)?o.components:[]}
+}
+function hydrateProduct(p){
+  if(p.type==="coffee") return new CoffeeProduct(p);
+  if(p.type==="extra") return new ExtraProduct(p);
+  if(p.type==="combo") return new ComboProduct(p);
+  return new CoffeeProduct({...p,recipeGrams:p.recipeGrams||15});
+}
+class InventoryAnalyzer{
+  constructor(data){this.data=data}
+  expandedConsumption(){
+    const coffee={grams:0,prepared:0};
+    const extras={};
+    for(const sale of this.data.sales){
+      const product=this.productById(sale.productId);
+      if(!product) continue;
+      this.consumeProduct(product,Number(sale.qty||1),coffee,extras);
+    }
+    return {coffee,extras};
+  }
+  productById(id){return this.data.products.find(p=>p.id===id)}
+  consumeProduct(product,qty,coffee,extras){
+    if(product.type==="coffee"){
+      coffee.prepared+=qty;
+      coffee.grams+=qty*Number(product.recipeGrams||0);
+    }else if(product.type==="extra"){
+      extras[product.id]=(extras[product.id]||0)+qty;
+    }else if(product.type==="combo"){
+      for(const c of product.components||[]){
+        const child=this.productById(c.productId);
+        if(child && child.type!=="combo") this.consumeProduct(child,qty*Number(c.qty||1),coffee,extras);
+      }
+    }
+  }
+}
+/* -------------------------------- */
+
+function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36)}
+
+function defaults(){
+  const filtered=new CoffeeProduct({name:"Filtrado",price:2500,recipeGrams:15});
+  const large=new CoffeeProduct({name:"Filtrado grande",price:3000,recipeGrams:18});
+  const milk=new CoffeeProduct({name:"Café con leche",price:3000,recipeGrams:15});
+  const cookie=new ExtraProduct({name:"Galleta",price:1000});
+  const muffin=new ExtraProduct({name:"Magdalena",price:1200});
+  const combo=new ComboProduct({name:"Café + Magdalena",price:2000,components:[
+    {productId:filtered.id,qty:1},{productId:muffin.id,qty:1}
+  ]});
+  return {
+    brand:"Hartley Coffee",
+    dayDate:new Date().toISOString().slice(0,10),
+    products:[filtered,large,milk,cookie,muffin,combo],
+    sales:[],expenses:[],
+    inventory:{
+      startCups:"",endCups:"",startGrams:"",endGrams:"",
+      extraStock:{[cookie.id]:{start:"",end:""},[muffin.id]:{start:"",end:""}},
+      notes:""
+    }
+  };
+}
+
+function migrateV2(x){
+  const migrated=defaults();
+  migrated.dayDate=x.dayDate||migrated.dayDate;
+  migrated.products=(x.products||[]).map(p=>new CoffeeProduct({
+    id:p.id,name:p.name,price:p.price,recipeGrams:(x.inventory&&x.inventory.gramsPerCup)||15
+  }));
+  migrated.sales=x.sales||[];
+  migrated.expenses=x.expenses||[];
+  migrated.inventory.startCups=x.inventory?.startCups??"";
+  migrated.inventory.endCups=x.inventory?.endCups??"";
+  migrated.inventory.startGrams=x.inventory?.startGrams??"";
+  migrated.inventory.endGrams=x.inventory?.endGrams??"";
+  migrated.inventory.notes=x.inventory?.notes??"";
+  migrated.inventory.extraStock={};
+  return migrated;
+}
+
+let data=defaults();
+let saveQueue=Promise.resolve();
+let apiReady=false;
+
+async function apiRequest(path, options={}){
+  const response=await fetch(path,{
+    headers:{"Content-Type":"application/json",...(options.headers||{})},
+    ...options
+  });
+  if(!response.ok){
+    const detail=await response.text();
+    throw new Error(detail||("Error HTTP "+response.status));
+  }
+  if(response.status===204) return null;
+  return response.json();
+}
+function setDbStatus(message, ok=true){
+  const el=document.getElementById("dbStatus");
+  if(el){el.textContent=message;el.style.color=ok?"#d9f4df":"#ffe0dc";}
+}
+async function persistState(){
+  if(!apiReady) return;
+  const snapshot=JSON.parse(JSON.stringify(data));
+  saveQueue=saveQueue.then(()=>apiRequest("/api/state",{
+    method:"PUT",body:JSON.stringify(snapshot)
+  })).then(()=>setDbStatus("● Base de datos conectada · cambios guardados",true))
+    .catch(err=>{console.error(err);setDbStatus("● Error al guardar en la base de datos",false);});
+  return saveQueue;
+}
+function save(){
+  render();
+  persistState();
+}
+async function initializeApp(){
+  try{
+    const remote=await apiRequest("/api/state");
+    if(remote && remote.products){
+      data=remote;
+      data.products=(data.products||[]).map(p=>hydrateProduct(p));
+      if(!data.inventory) data.inventory=defaults().inventory;
+      if(!data.inventory.extraStock) data.inventory.extraStock={};
+    }else{
+      data=defaults();
+      apiReady=true;
+      await persistState();
+    }
+    apiReady=true;
+    render();
+    setDbStatus("● Base de datos conectada · PostgreSQL / SQLite",true);
+  }catch(err){
+    console.error(err);
+    apiReady=false;
+    setDbStatus("● No se pudo conectar con el servidor. Recarga cuando esté disponible.",false);
+    document.getElementById("productButtons").innerHTML='<div class="empty">No fue posible cargar los datos. Verifica la conexión con el servidor.</div>';
+  }
+}
+function money(n){return new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(Number(n)||0)}
+function num(n,dec=0){if(n===null||n===undefined||n==="") return "—";return new Intl.NumberFormat("es-CL",{maximumFractionDigits:dec}).format(Number(n))}
+function signed(n,dec=0){const x=Number(n);return (x>0?"+":"")+num(x,dec)}
+function dateText(ts){return new Date(ts).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})}
+function longDate(){return new Date(data.dayDate+"T12:00:00").toLocaleDateString("es-CL",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}
+function typeLabel(t){return t==="coffee"?"Café":t==="extra"?"Extra":"Combo"}
+function typeIcon(t){return t==="coffee"?"☕":t==="extra"?"🍪":"🧺"}
+
+function metrics(){
+  const salesTotal=data.sales.reduce((s,x)=>s+Number(x.price)*Number(x.qty||1),0);
+  const expensesTotal=data.expenses.reduce((s,x)=>s+Number(x.amount),0);
+  const unitsSold=data.sales.reduce((s,x)=>s+Number(x.qty||1),0);
+  const net=salesTotal-expensesTotal;
+
+  const a=new InventoryAnalyzer(data);
+  const expanded=a.expandedConsumption();
+
+  const i=data.inventory;
+  const cupsUsed=(i.startCups!==""&&i.endCups!=="")?Number(i.startCups)-Number(i.endCups):null;
+  const gramsUsed=(i.startGrams!==""&&i.endGrams!=="")?Number(i.startGrams)-Number(i.endGrams):null;
+  const expectedGrams=expanded.coffee.grams;
+  const coffeeVariance=gramsUsed===null?null:gramsUsed-expectedGrams;
+  const cupVariance=cupsUsed===null?null:cupsUsed-expanded.coffee.prepared;
+  const realGramsPerCoffee=(gramsUsed!==null&&expanded.coffee.prepared>0)?gramsUsed/expanded.coffee.prepared:null;
+
+  const extraMetrics={};
+  for(const p of data.products.filter(p=>p.type==="extra")){
+    const stock=i.extraStock[p.id]||{start:"",end:""};
+    const used=(stock.start!==""&&stock.end!=="")?Number(stock.start)-Number(stock.end):null;
+    const expected=expanded.extras[p.id]||0;
+    extraMetrics[p.id]={used,expected,variance:used===null?null:used-expected};
+  }
+
+  return {salesTotal,expensesTotal,unitsSold,net,cupsUsed,gramsUsed,expectedGrams,coffeeVariance,cupVariance,realGramsPerCoffee,coffeesPrepared:expanded.coffee.prepared,extraMetrics}
+}
+
+function addSale(productId){
+  const p=data.products.find(x=>x.id===productId); if(!p) return;
+  data.sales.unshift({id:uid(),productId:p.id,name:p.name,price:Number(p.price),qty:1,mode:"quick",ts:Date.now()});
+  save();toast(typeIcon(p.type)+" "+p.name+" vendido");
+}
+function syncBulkPrice(){
+  const p=data.products.find(x=>x.id===document.getElementById("bulkProduct").value);
+  if(p) document.getElementById("bulkPrice").value=p.price;
+}
+function addBulkSale(){
+  const p=data.products.find(x=>x.id===document.getElementById("bulkProduct").value);
+  const qty=Number(document.getElementById("bulkQty").value),price=Number(document.getElementById("bulkPrice").value);
+  if(!p){alert("Selecciona un producto.");return}
+  if(!qty||qty<1||!Number.isInteger(qty)){alert("Ingresa una cantidad válida.");return}
+  if(price<0||Number.isNaN(price)){alert("Ingresa un precio válido.");return}
+  data.sales.unshift({id:uid(),productId:p.id,name:p.name,price,qty,mode:"bulk",ts:Date.now()});
+  document.getElementById("bulkQty").value="";save();toast("✅ "+qty+" unidades agregadas");
+}
+function addExpense(){
+  const amount=Number(document.getElementById("expenseAmount").value),description=document.getElementById("expenseDescription").value.trim(),category=document.getElementById("expenseCategory").value;
+  if(!amount||amount<=0){alert("Ingresa un monto válido.");return}
+  data.expenses.unshift({id:uid(),amount,description:description||category,category,ts:Date.now()});
+  document.getElementById("expenseAmount").value="";document.getElementById("expenseDescription").value="";save();toast("🧾 Gasto agregado");
+}
+
+function updateProductForm(){
+  const t=document.getElementById("productType").value;
+  document.getElementById("coffeeFields").classList.toggle("hidden",t!=="coffee");
+  document.getElementById("extraFields").classList.toggle("hidden",t!=="extra");
+  document.getElementById("comboFields").classList.toggle("hidden",t!=="combo");
+  if(t==="combo"&&!document.querySelector(".component-row")){
+    addComboComponentRow("coffee");
+    addComboComponentRow("extra");
+  }
+  if(t==="combo") updateComboPreview();
+}
+function componentOptions(){
+  return data.products.filter(p=>p.type!=="combo").map(p=>`<option value="${p.id}">${typeIcon(p.type)} ${escapeHtml(p.name)}</option>`).join("");
+}
+function chooseDefaultComponent(preferredType){
+  const rows=[...document.querySelectorAll(".component-row")];
+  const used=new Set(rows.map(r=>r.querySelector(".comboProduct")?.value).filter(Boolean));
+  const products=data.products.filter(p=>p.type!=="combo");
+  let candidate=products.find(p=>p.type===preferredType&&!used.has(p.id));
+  if(!candidate) candidate=products.find(p=>!used.has(p.id));
+  if(!candidate) candidate=products.find(p=>p.type===preferredType);
+  return candidate||products[0]||null;
+}
+function addComboComponentRow(preferredType=null){
+  const wrap=document.getElementById("comboComponents");
+  const d=document.createElement("div");d.className="component-row";
+  const currentRows=wrap.querySelectorAll(".component-row").length;
+  const smartType=preferredType||(currentRows===0?"coffee":currentRows===1?"extra":null);
+  const chosen=chooseDefaultComponent(smartType);
+  d.innerHTML=`<div class="field" style="margin:0"><label>Producto</label><select class="comboProduct" onchange="updateComboPreview()">${componentOptions()}</select></div>
+    <div class="field" style="margin:0"><label>Cant.</label><input class="comboQty" type="number" min="1" step="1" value="1" oninput="updateComboPreview()"></div>
+    <button class="danger" type="button" onclick="removeComboComponentRow(this)">×</button>`;
+  wrap.appendChild(d);
+  if(chosen) d.querySelector(".comboProduct").value=chosen.id;
+  updateComboPreview();
+}
+function removeComboComponentRow(btn){
+  btn.parentElement.remove();
+  updateComboPreview();
+}
+function getComboComponents(){
+  return [...document.querySelectorAll(".component-row")].map(r=>({
+    productId:r.querySelector(".comboProduct").value,
+    qty:Math.max(1,Number(r.querySelector(".comboQty").value)||1)
+  })).filter(x=>x.productId);
+}
+function updateComboPreview(){
+  const lines=document.getElementById("comboPreviewLines");
+  const total=document.getElementById("comboPreviewTotal");
+  if(!lines||!total) return;
+
+  const components=getComboComponents();
+  if(!components.length){
+    lines.innerHTML="";
+    total.textContent="Agrega componentes para ver el consumo esperado.";
+    return;
+  }
+
+  let totalCoffeeGrams=0;
+  let totalCoffees=0;
+  const extras={};
+
+  lines.innerHTML=components.map(c=>{
+    const p=data.products.find(x=>x.id===c.productId);
+    if(!p) return "";
+    const qty=Number(c.qty||1);
+
+    if(p.type==="coffee"){
+      const grams=qty*Number(p.recipeGrams||0);
+      totalCoffeeGrams+=grams;
+      totalCoffees+=qty;
+      return `<div class="combo-preview-line">☕ <strong>${qty}× ${escapeHtml(p.name)}</strong> → ${num(grams,1)} g de café + ${qty} vaso${qty===1?"":"s"}</div>`;
+    }
+
+    if(p.type==="extra"){
+      extras[p.id]=(extras[p.id]||0)+qty;
+      return `<div class="combo-preview-line">🍪 <strong>${qty}× ${escapeHtml(p.name)}</strong> → ${qty} unidad${qty===1?"":"es"} de inventario</div>`;
+    }
+    return "";
+  }).join("");
+
+  const parts=[];
+  if(totalCoffeeGrams>0) parts.push(`${num(totalCoffeeGrams,1)} g de café`);
+  if(totalCoffees>0) parts.push(`${totalCoffees} vaso${totalCoffees===1?"":"s"}`);
+  Object.entries(extras).forEach(([id,qty])=>{
+    const p=data.products.find(x=>x.id===id);
+    if(p) parts.push(`${qty} ${p.name}${qty===1?"":" (un.)"}`);
+  });
+
+  total.innerHTML=`<strong>Consumo esperado por cada combo vendido:</strong><br>${parts.length?parts.map(escapeHtml).join(" + "):"Sin consumo de inventario configurado."}`;
+}
+function addProduct(){
+  const type=document.getElementById("productType").value,name=document.getElementById("productName").value.trim(),price=Number(document.getElementById("productPrice").value);
+  if(!name||!price||price<=0){alert("Ingresa nombre y precio válidos.");return}
+  let p;
+  if(type==="coffee"){
+    const recipe=Number(document.getElementById("coffeeRecipeGrams").value);
+    if(!recipe||recipe<=0){alert("Indica los gramos de café de la receta.");return}
+    p=new CoffeeProduct({name,price,recipeGrams:recipe});
+  }else if(type==="extra"){
+    p=new ExtraProduct({name,price});
+    data.inventory.extraStock[p.id]={start:"",end:""};
+  }else{
+    const components=getComboComponents();
+    if(!components.length){alert("Agrega al menos un componente al combo.");return}
+    p=new ComboProduct({name,price,components});
+  }
+  data.products.push(p);
+  document.getElementById("productName").value="";document.getElementById("productPrice").value="";document.getElementById("coffeeRecipeGrams").value="";
+  document.getElementById("comboComponents").innerHTML="";
+  updateProductForm();save();toast("🏷️ Producto agregado");
+}
+function deleteSale(id){if(confirm("¿Eliminar esta venta?")){data.sales=data.sales.filter(x=>x.id!==id);save()}}
+function deleteExpense(id){if(confirm("¿Eliminar este gasto?")){data.expenses=data.expenses.filter(x=>x.id!==id);save()}}
+function deleteProduct(id){
+  const usedByCombo=data.products.some(p=>p.type==="combo"&&(p.components||[]).some(c=>c.productId===id));
+  if(usedByCombo){alert("Este producto está siendo usado dentro de un combo. Elimina o modifica ese combo primero.");return}
+  if(confirm("¿Eliminar este producto?")){data.products=data.products.filter(x=>x.id!==id);delete data.inventory.extraStock[id];save()}
+}
+
+function saveInventory(){
+  const i=data.inventory;
+  i.startCups=document.getElementById("startCups").value;i.endCups=document.getElementById("endCups").value;i.startGrams=document.getElementById("startGrams").value;i.endGrams=document.getElementById("endGrams").value;i.notes=document.getElementById("dayNotes").value;
+  document.querySelectorAll("[data-extra-start]").forEach(el=>{const id=el.dataset.extraStart;if(!i.extraStock[id]) i.extraStock[id]={start:"",end:""};i.extraStock[id].start=el.value});
+  document.querySelectorAll("[data-extra-end]").forEach(el=>{const id=el.dataset.extraEnd;if(!i.extraStock[id]) i.extraStock[id]={start:"",end:""};i.extraStock[id].end=el.value});
+  renderComputedOnly();persistState();
+}
+
+function showView(name,btn){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));document.getElementById("view-"+name).classList.add("active");
+  document.querySelectorAll(".tabbar button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");window.scrollTo({top:0,behavior:"smooth"});
+}
+function setIfNotFocused(id,value){const el=document.getElementById(id);if(document.activeElement!==el) el.value=value??""}
+function escapeHtml(str){return String(str??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function toast(text){const el=document.getElementById("toast");el.textContent=text;el.classList.add("show");clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>el.classList.remove("show"),1500)}
+
+function renderComputedOnly(){
+  const m=metrics();
+  document.getElementById("statSales").textContent=money(m.salesTotal);document.getElementById("statExpenses").textContent=money(m.expensesTotal);document.getElementById("statNet").textContent=money(m.net);document.getElementById("statUnits").textContent=m.unitsSold;
+  document.getElementById("avgTicket").textContent=money(m.unitsSold?m.salesTotal/m.unitsSold:0);document.getElementById("movementCount").textContent=data.sales.length+data.expenses.length;
+  document.getElementById("cupsUsed").textContent=m.cupsUsed===null?"—":num(m.cupsUsed);document.getElementById("cupVariance").textContent=m.cupVariance===null?"—":signed(m.cupVariance)+" vasos";
+  document.getElementById("gramsUsed").textContent=m.gramsUsed===null?"—":num(m.gramsUsed,1)+" g";document.getElementById("expectedGrams").textContent=num(m.expectedGrams,1)+" g";
+  document.getElementById("coffeeVariance").textContent=m.coffeeVariance===null?"—":signed(m.coffeeVariance,1)+" g";document.getElementById("realGramsPerCoffee").textContent=m.realGramsPerCoffee===null?"—":num(m.realGramsPerCoffee,1)+" g";
+  document.getElementById("summaryCoffeesPrepared").textContent=m.coffeesPrepared;document.getElementById("summaryGramsUsed").textContent=m.gramsUsed===null?"—":num(m.gramsUsed,1)+" g";
+  document.getElementById("summaryCupVariance").textContent=m.cupVariance===null?"—":signed(m.cupVariance)+" vasos";document.getElementById("summaryCoffeeVariance").textContent=m.coffeeVariance===null?"—":signed(m.coffeeVariance,1)+" g";
+
+  const wm=document.getElementById("wasteMetric");wm.classList.remove("good","warn","bad");
+  if(m.coffeeVariance!==null){const abs=Math.abs(m.coffeeVariance);if(abs<=Math.max(10,m.expectedGrams*.03))wm.classList.add("good");else if(m.coffeeVariance>0)wm.classList.add("bad");else wm.classList.add("warn")}
+
+  document.querySelectorAll("[data-extra-metric]").forEach(el=>{
+    const id=el.dataset.extraMetric,v=m.extraMetrics[id];if(!v)return;
+    el.textContent=v.variance===null?"—":signed(v.variance)+" un.";
+  });
+}
+
+function render(){
+  renderComputedOnly();
+  document.getElementById("reportDate").textContent=longDate();
+
+  document.getElementById("productButtons").innerHTML=data.products.length?data.products.map(p=>`
+    <button class="product-btn" onclick="addSale('${p.id}')">
+      <strong>${typeIcon(p.type)} ${escapeHtml(p.name)}</strong><span class="price">${money(p.price)}</span>
+      <small>${p.type==="coffee"?(num(p.recipeGrams,1)+" g por receta"):p.type==="extra"?"Control por unidad":comboDescription(p)}</small>
+      <span class="type-chip">${typeLabel(p.type)}</span>
+    </button>`).join(""):`<div class="empty">Agrega productos.</div>`;
+
+  const bulk=document.getElementById("bulkProduct"),old=bulk.value;
+  bulk.innerHTML=data.products.map(p=>`<option value="${p.id}">${typeIcon(p.type)} ${escapeHtml(p.name)}</option>`).join("");
+  if(data.products.some(p=>p.id===old)) bulk.value=old;bulk.onchange=syncBulkPrice;if(!document.getElementById("bulkPrice").value)syncBulkPrice();
+
+  const movements=[...data.sales.map(x=>({...x,type:"sale",amount:Number(x.price)*Number(x.qty||1)})),...data.expenses.map(x=>({...x,type:"expense",amount:Number(x.amount)}))].sort((a,b)=>b.ts-a.ts).slice(0,10);
+  document.getElementById("recentList").innerHTML=movements.length?movements.map(x=>x.type==="sale"?`
+    <div class="item"><div class="main"><strong>${escapeHtml(x.name)}${Number(x.qty||1)>1?" × "+Number(x.qty||1):""}</strong><small>${dateText(x.ts)} · ${x.mode==="bulk"?"carga de cierre":"venta rápida"}</small></div>
+    <div><div class="amount pos">+${money(x.amount)}</div><button class="mini" style="border:0;background:none" onclick="deleteSale('${x.id}')">eliminar</button></div></div>`:`
+    <div class="item"><div class="main"><strong>🧾 ${escapeHtml(x.description)}</strong><small>${escapeHtml(x.category)} · ${dateText(x.ts)}</small></div><div><div class="amount neg">-${money(x.amount)}</div><button class="mini" style="border:0;background:none" onclick="deleteExpense('${x.id}')">eliminar</button></div></div>`).join(""):`<div class="empty">Todavía no hay movimientos.</div>`;
+
+  document.getElementById("expenseList").innerHTML=data.expenses.length?data.expenses.map(x=>`<div class="item"><div class="main"><strong>${escapeHtml(x.description)}</strong><small>${escapeHtml(x.category)} · ${dateText(x.ts)}</small></div><div><div class="amount neg">-${money(x.amount)}</div><button class="mini" style="border:0;background:none" onclick="deleteExpense('${x.id}')">eliminar</button></div></div>`).join(""):`<div class="empty">No hay gastos registrados.</div>`;
+
+  document.getElementById("productList").innerHTML=data.products.length?data.products.map(p=>`
+    <div class="item"><div class="main"><strong>${typeIcon(p.type)} ${escapeHtml(p.name)}</strong><small>${productDetail(p)}</small></div><div><div class="amount">${money(p.price)}</div><button class="mini" style="border:0;background:none" onclick="deleteProduct('${p.id}')">eliminar</button></div></div>`).join(""):`<div class="empty">No hay productos.</div>`;
+
+  const i=data.inventory;
+  setIfNotFocused("startCups",i.startCups);setIfNotFocused("endCups",i.endCups);setIfNotFocused("startGrams",i.startGrams);setIfNotFocused("endGrams",i.endGrams);setIfNotFocused("dayNotes",i.notes);
+
+  const m=metrics();
+  const extras=data.products.filter(p=>p.type==="extra");
+  document.getElementById("extraInventoryList").innerHTML=extras.length?extras.map(p=>{
+    const st=i.extraStock[p.id]||{start:"",end:""}, em=m.extraMetrics[p.id]||{expected:0,variance:null};
+    return `<div class="item" style="display:block">
+      <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:9px"><strong>🍪 ${escapeHtml(p.name)}</strong><span class="pill">esperado: ${num(em.expected)} un.</span></div>
+      <div class="row">
+        <div class="field"><label>Inicio</label><input data-extra-start="${p.id}" type="number" inputmode="numeric" min="0" value="${escapeHtml(st.start)}" oninput="saveInventory()"></div>
+        <div class="field"><label>Final</label><input data-extra-end="${p.id}" type="number" inputmode="numeric" min="0" value="${escapeHtml(st.end)}" oninput="saveInventory()"></div>
+      </div>
+      <div class="metric"><small>Diferencia / merma</small><strong data-extra-metric="${p.id}">${em.variance===null?"—":signed(em.variance)+" un."}</strong></div>
+    </div>`;
+  }).join(""):`<div class="empty">Agrega galletas, magdalenas u otros productos como tipo “Extra”.</div>`;
+
+  refreshComboSelects();
+  updateProductForm();
+}
+function productDetail(p){
+  if(p.type==="coffee") return `${num(p.recipeGrams,1)} g de café por unidad`;
+  if(p.type==="extra") return "Inventario por unidades";
+  return comboDescription(p);
+}
+function comboDescription(p){
+  return (p.components||[]).map(c=>{
+    const child=data.products.find(x=>x.id===c.productId);
+    if(!child) return "";
+    if(child.type==="coffee") return `${c.qty}× ${child.name} (${num(Number(child.recipeGrams||0)*Number(c.qty||1),1)} g café)`;
+    return `${c.qty}× ${child.name}`;
+  }).filter(Boolean).join(" + ")||"Combo";
+}
+function refreshComboSelects(){
+  document.querySelectorAll(".comboProduct").forEach(sel=>{
+    const old=sel.value;
+    sel.innerHTML=componentOptions();
+    if([...sel.options].some(o=>o.value===old)) sel.value=old;
+  });
+  updateComboPreview();
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="hartley-coffee-respaldo-"+data.dayDate+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),500);
+}
+function importData(ev){
+  const file=ev.target.files[0];if(!file)return;const r=new FileReader();
+  r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.products||!x.sales||!x.expenses)throw new Error();x.products=x.products.map(p=>hydrateProduct(p));if(!x.inventory.extraStock)x.inventory.extraStock={};data=x;save();toast("✅ Respaldo importado")}catch(e){alert("Ese archivo no parece ser un respaldo válido.")}};
+  r.readAsText(file);ev.target.value="";
+}
+function resetDay(){
+  if(!confirm("¿Comenzar una jornada nueva? Se conservarán productos y recetas. El stock final pasará a ser el stock inicial."))return;
+  const old=data.inventory,extraStock={};
+  for(const p of data.products.filter(p=>p.type==="extra")){
+    const s=old.extraStock[p.id]||{start:"",end:""};extraStock[p.id]={start:s.end!==""?s.end:"",end:""};
+  }
+  data.sales=[];data.expenses=[];data.dayDate=new Date().toISOString().slice(0,10);
+  data.inventory={startCups:old.endCups!==""?old.endCups:"",endCups:"",startGrams:old.endGrams!==""?old.endGrams:"",endGrams:"",extraStock,notes:""};
+  save();toast("🌤️ Jornada nueva");
+}
+
+function exportPDF(){
+  if(!window.jspdf||!window.jspdf.jsPDF){alert("No se pudo cargar el generador de PDF. Revisa la conexión a internet.");return}
+  const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"}),m=metrics();
+  const coffee=[111,78,55],cream=[247,241,232],ink=[46,38,31],muted=[120,109,99],green=[47,125,85],red=[169,74,66],tan=[234,216,192];
+  const margin=16; let y=0;
+  const txt=(t,x,yy,o={})=>doc.text(String(t??""),x,yy,o);
+  doc.setFillColor(...coffee);doc.roundedRect(10,10,190,34,5,5,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(20);txt("HARTLEY COFFEE",margin,24);doc.setFont("helvetica","normal");doc.setFontSize(10);txt("Informe de jornada · "+longDate(),margin,32);txt("Ventas, recetas, inventario y merma",margin,38);
+
+  const cards=[["Ventas",money(m.salesTotal)],["Gastos",money(m.expensesTotal)],["Ganancia neta",money(m.net)],["Productos vendidos",String(m.unitsSold)]];
+  let x=10;y=50;cards.forEach(c=>{doc.setFillColor(...cream);doc.roundedRect(x,y,45,24,3,3,"F");doc.setTextColor(...muted);doc.setFontSize(8);doc.setFont("helvetica","normal");txt(c[0],x+4,y+7);doc.setTextColor(...ink);doc.setFontSize(12);doc.setFont("helvetica","bold");txt(c[1],x+4,y+17);x+=48});
+
+  y=84;doc.setTextColor(...ink);doc.setFont("helvetica","bold");doc.setFontSize(12);txt("Balance financiero",margin,y);y+=7;
+  const vals=[{label:"Ventas",value:m.salesTotal,color:green},{label:"Gastos",value:m.expensesTotal,color:red},{label:"Neto",value:Math.abs(m.net),color:m.net>=0?coffee:red}],maxVal=Math.max(1,...vals.map(v=>v.value));
+  vals.forEach((v,i)=>{const yy=y+i*12;doc.setTextColor(...muted);doc.setFont("helvetica","normal");doc.setFontSize(8);txt(v.label,margin,yy+5);doc.setFillColor(...tan);doc.roundedRect(42,yy,110,7,2,2,"F");doc.setFillColor(...v.color);doc.roundedRect(42,yy,Math.max(1,(v.value/maxVal)*110),7,2,2,"F");doc.setTextColor(...ink);doc.setFont("helvetica","bold");txt(money(i===2?m.net:v.value),158,yy+5)});
+
+  y+=42;doc.setTextColor(...ink);doc.setFont("helvetica","bold");doc.setFontSize(12);txt("Café e insumos base",margin,y);y+=8;
+  const rows=[
+    ["Cafés preparados",m.coffeesPrepared],
+    ["Vasos utilizados",m.cupsUsed===null?"—":m.cupsUsed],
+    ["Diferencia de vasos",m.cupVariance===null?"—":signed(m.cupVariance)+" vasos"],
+    ["Café utilizado",m.gramsUsed===null?"—":num(m.gramsUsed,1)+" g"],
+    ["Café esperado por recetas",num(m.expectedGrams,1)+" g"],
+    ["Merma / diferencia café",m.coffeeVariance===null?"—":signed(m.coffeeVariance,1)+" g"],
+    ["Promedio real por café",m.realGramsPerCoffee===null?"—":num(m.realGramsPerCoffee,1)+" g"]
+  ];
+  rows.forEach((r,i)=>{if(i%2===0){doc.setFillColor(252,248,243);doc.rect(margin,y-4,178,8,"F")}doc.setTextColor(...muted);doc.setFont("helvetica","normal");doc.setFontSize(8.5);txt(r[0],margin+2,y+1);doc.setTextColor(...ink);doc.setFont("helvetica","bold");txt(r[1],190,y+1,{align:"right"});y+=8});
+
+  y+=6;doc.setTextColor(...ink);doc.setFont("helvetica","bold");doc.setFontSize(12);txt("Inventario de extras",margin,y);y+=8;
+  const extras=data.products.filter(p=>p.type==="extra");
+  if(!extras.length){doc.setFont("helvetica","normal");doc.setTextColor(...muted);doc.setFontSize(9);txt("Sin extras configurados.",margin,y);y+=7}
+  else extras.forEach(p=>{if(y>270){doc.addPage();y=18}const s=data.inventory.extraStock[p.id]||{start:"",end:""},em=m.extraMetrics[p.id];doc.setFont("helvetica","normal");doc.setTextColor(...ink);doc.setFontSize(9);txt(p.name,margin,y);doc.setTextColor(...muted);txt(`Inicio ${s.start||"—"} · Final ${s.end||"—"} · Esperado ${em.expected} · Dif. ${em.variance===null?"—":signed(em.variance)}`,190,y,{align:"right"});y+=7});
+
+  y+=5;if(y>250){doc.addPage();y=18}doc.setTextColor(...ink);doc.setFont("helvetica","bold");doc.setFontSize(12);txt("Ventas por producto",margin,y);y+=8;
+  const byProduct={};data.sales.forEach(s=>{if(!byProduct[s.name])byProduct[s.name]={qty:0,total:0};byProduct[s.name].qty+=Number(s.qty||1);byProduct[s.name].total+=Number(s.price)*Number(s.qty||1)});
+  const entries=Object.entries(byProduct);if(!entries.length){doc.setFont("helvetica","normal");doc.setTextColor(...muted);doc.setFontSize(9);txt("Sin ventas registradas.",margin,y);y+=7}
+  else entries.forEach(([name,v])=>{if(y>272){doc.addPage();y=18}doc.setFont("helvetica","normal");doc.setTextColor(...ink);doc.setFontSize(9);txt(name,margin,y);doc.setTextColor(...muted);txt(v.qty+" un. · "+money(v.total),190,y,{align:"right"});y+=7});
+
+  if(data.inventory.notes&&data.inventory.notes.trim()){y+=6;if(y>245){doc.addPage();y=18}doc.setTextColor(...ink);doc.setFont("helvetica","bold");doc.setFontSize(12);txt("Notas de la jornada",margin,y);y+=7;doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(...muted);doc.text(doc.splitTextToSize(data.inventory.notes,178),margin,y)}
+
+  const pages=doc.getNumberOfPages();for(let p=1;p<=pages;p++){doc.setPage(p);doc.setDrawColor(225,215,204);doc.line(16,287,194,287);doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(...muted);txt("Hartley Coffee · Informe generado desde la app",16,292);txt("Página "+p+" de "+pages,194,292,{align:"right"})}
+  doc.save("Hartley-Coffee-"+data.dayDate+".pdf");toast("📄 PDF generado");
+}
+
+initializeApp();
+</script>
+</body>
+  </html>
